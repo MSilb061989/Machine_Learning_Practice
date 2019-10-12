@@ -263,5 +263,12 @@ if __name__ == "__main__":
 
     #Call Instance of "CombinedAttributesAdder Class
     attr_adder = CombinedAttributesAdder(add_bedrooms_per_room=False) #Call "CombinedAttributesAdder" constructor
-    housing_extra_attribs = attr_adder.transform(housing.values) #Call method from "CombinedAttributesAdder" class
+    housing_extra_attribs = attr_adder.transform(housing.values) #Call method from "CombinedAttributesAdder class
 
+    #Because PyCharm can such sometimes, see "Feature Scaling" on page 66 for information about one of the most
+    #important transformations: feature scaling. There are two common ways: MinMax (Normalization) and
+    #Standardization (Convert to Standard Normal Distribution)
+
+    #Standardization of a dataset is a common requirement for many machine learning estimators: they might behave badly
+    # if the individual features do not more or less look like standard normally distributed data
+    # (e.g. Gaussian with 0 mean and unit variance).
