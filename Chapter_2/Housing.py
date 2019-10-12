@@ -49,7 +49,7 @@ if __name__ == "__main__":
     print(housing.describe())
 
     housing.hist(bins=50, figsize=(20,15))
-    plt.show()
+    #plt.show()
 
     #Split dataframe into random training and test sets
     train_set, test_set = train_test_split(housing, test_size=0.2, random_state=42)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     housing.plot(kind='scatter', x='longitude', y='latitude', alpha=0.4,
                  s=housing["population"]/100, label="population", figsize=(10,7),
                  c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,)
-    plt.show()
+    #plt.show()
 
     #Look at how each Attribute Correlates with Median House Value (Median House Value is the "Target" Attribute)
     corr_matrix = housing.corr()
@@ -100,11 +100,11 @@ if __name__ == "__main__":
 
     attributes = ["median_house_value", "median_income", "total_rooms", "housing_median_age"]
     scatter_matrix(housing[attributes], figsize=(12,8))
-    plt.show()
+    #plt.show()
 
     housing.plot(kind="scatter", x="median_income", y="median_house_value",
                  alpha=0.1)
-    plt.show()
+    #plt.show()
 
     #Try Different Combinations of Attributes Before Feeding Data to Machine Learning Algorithm
 
