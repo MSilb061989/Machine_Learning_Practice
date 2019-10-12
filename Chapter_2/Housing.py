@@ -40,6 +40,10 @@ class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
         else:
             return np.c_[X, room_per_household, population_per_household]
 
+#This transformer has one hyperparamter, "add_bedrooms_per_room", set to True by default and can easily allow for the
+#determination of whether adding this attribute helps the Machine Learning algorithm (gate the data by adding
+#a hyperparamter you are not %100 sure about
+
 def fetch_housing_data(housing_url=HOUSING_URL, housing_path=HOUSING_PATH):
 
     if not os.path.isdir(housing_path):
@@ -257,4 +261,7 @@ if __name__ == "__main__":
 
     #NOTE: Line 1.1 and Line 1.2 provide the same result, but Line 1.2 is safer, as noted
 
+    #Call Instance of "CombinedAttributesAdder Class
+    attr_adder = CombinedAttributesAdder(add_bedrooms_per_room=False) #Call "CombinedAttributesAdder" constructor
+    housing_extra_attribs = attr_adder.transform(housing.values) #Call method from "CombinedAttributesAdder" class
 
