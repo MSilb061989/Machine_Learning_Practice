@@ -9,6 +9,7 @@ from zlib import crc32 #For compressing data...
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
 
 ####################################################################################################
 #This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
@@ -23,6 +24,21 @@ from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
 HOUSING_PATH = os.path.join("datasets", "housing")
 HOUSING_URL = DOWNLOAD_ROOT + "datasets/housing/housing.tgz"
+
+#Custom transformer to add attributes
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, add_bedrooms_per_room = True): #No *args or **kargs
+        self.add_bedrooms_per_room = add_bedrooms_per_room
+    def fit(self, X, y=None):
+        return self #Nothing else to do
+    def transform(self, X, y=None):
+        room_per_household = X[:, rooms_ix] / X[:, households_ix]
+        population_per_household = X[:, population_ix] / X[:, households_ix]
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
+            return np.c_[X, room_per_household, population_per_household, bedrooms_per_room]
+        else:
+            return np.c_[X, room_per_household, population_per_household]
 
 def fetch_housing_data(housing_url=HOUSING_URL, housing_path=HOUSING_PATH):
 
@@ -230,7 +246,15 @@ if __name__ == "__main__":
     #List of categories using the encoder's categories instance variable
     print(cat_encoder.categories_)
 
+    #May need to write custom transformations for tasks such as custom cleanup operations
+    #This transformer class adds the combined attributes discussed earlier
+    rooms_ix, bedrooms_ix, population_ix, households_ix = 3, 4, 5, 6 #Line 1.1
 
+    # get the right column indices: safer than hard-coding indices 3, 4, 5, 6
+    rooms_ix, bedrooms_ix, population_ix, household_ix = [           #Line 1.2
+        list(housing.columns).index(col)
+        for col in ("total_rooms", "total_bedrooms", "population", "households")]
 
+    #NOTE: Line 1.1 and Line 1.2 provide the same result, but Line 1.2 is safer, as noted
 
 
