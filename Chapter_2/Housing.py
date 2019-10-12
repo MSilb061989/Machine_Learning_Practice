@@ -12,6 +12,7 @@ from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LinearRegression
 
 ####################################################################################################
 #This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
@@ -307,3 +308,17 @@ if __name__ == "__main__":
     #concatenates the outputs along the second axis
 
     housing_prepared = full_pipeline.fit_transform(housing)
+
+    #Train a Machine Learning model using linear regression
+    lin_reg = LinearRegression()
+    lin_reg.fit(housing_prepared, housing_labels)
+
+    #Try linear regression model out on a few instances from teh training set!
+    some_data = housing.iloc[:5]
+    some_labels = housing_labels.iloc[:5]
+    some_data_prepared = full_pipeline.transform(some_data)
+    print("Predictions:" ,lin_reg.predict(some_data_prepared))
+    print('\n')
+    print("Labels: ", list(some_labels))
+
+    #Measure the regression model's RMSE on the whole training set using Scikit-Learn's "mean_squared_error" function
