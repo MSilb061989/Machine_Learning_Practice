@@ -11,6 +11,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
 
 ####################################################################################################
 #This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
@@ -285,3 +286,24 @@ if __name__ == "__main__":
 
     #Calling the "Pipeline's" fit method calls fit_method() sequentially on all transformers, passing the output of each
     #call as the parameter to the next call, until it reaches the final estimator which then the fit() method is called
+
+    #From the Scikit-Learn website: Sequentially apply a list of transforms and a final estimator. Intermediate steps of
+    # the pipeline must be ‘transforms’, that is, they must implement fit and transform methods. The final estimator
+    # only needs to implement fit. The transformers in the pipeline can be cached using memory argument
+
+    #Use ColumnTransformer from Scikit-Learn to apply transformation to all columns, whether categorical or numerical
+    num_attribs = list(housing_num)
+    cat_atribs = ["ocean_proximity"]
+
+    full_pipeline = ColumnTransformer([
+        ("num", num_pipeline, num_attribs),   #<-- Returns a dense matrix
+        ("cat", OneHotEncoder(), cat_atribs), #<-- Returns a sparse matrix
+    ]) #<-- Group together categorical and numerical column names and construct a ColumnTransformer
+    #Constructor requires a list of tuples with name, a transformer and a list of names (or indices) of columns that the
+    #transformer should be applied to
+    #1.) Numerical columns are transformed with the num_pipeline defined earlier
+    #2.) Categorical columns should be transformed using a OneHotEncoder
+    #Apply this ColumnTransformer to the housing data --> applies each transformer to the appropriate columns and
+    #concatenates the outputs along the second axis
+
+    housing_prepared = full_pipeline.fit_transform(housing)
