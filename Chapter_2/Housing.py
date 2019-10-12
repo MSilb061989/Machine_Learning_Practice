@@ -7,6 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from zlib import crc32 #For compressing data...
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+
+####################################################################################################
+#This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
+#sklearn.impute.SimpleImputer class
+
+# try:
+#     from sklearn.impute import SimpleImputer # Scikit-Learn 0.20+
+# except ImportError:
+#     from sklearn.preprocessing import Imputer as SimpleImputer
+####################################################################################################
 
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
 HOUSING_PATH = os.path.join("datasets", "housing")
@@ -129,7 +141,96 @@ if __name__ == "__main__":
     #Creates a Copy of the Data "strat_train_set"
     #The predictors and labels are separated since we don't want to necessarily apply the same transformations to the
     #predictors and target values
-    housing = strat_train_set.drop("median_house_value", axis=1)
+    housing = strat_train_set.drop("median_house_value", axis=1) #Drop "median_house_value" from training set and creates a copy of the training set
+    ###NOTE: I believe "median_house_value" was dropped because we are separating the predictors and labels...###
     print(housing)
     housing_labels = strat_train_set["median_house_value"].copy()
     print(housing.info())
+
+    #Sample incomplete rows
+    sample_incomplete_rows = housing[housing.isnull().any(axis=1)].head()
+    print(sample_incomplete_rows)
+
+    print(housing_labels) #Print Training Set (This is only the "median_house_value" attribute)
+
+    #Recall: At this point, the "total-bedrooms" attribute is missing some values
+    #There are three options to take care of the attribute's missing values:
+    #1.) Get rid of the corresponding districts (rows)
+    #2.) Get rid of the whole attribute
+    #3.) Set the values to some value (zero, mean, median etc.)
+    housing.dropna(subset=["total_bedrooms"])   #Option #1.)
+    housing.drop("total_bedrooms", axis=1)      #Option #2.)
+    median = housing["total_bedrooms"].median() #Option #3.)
+    housing["total_bedrooms"].fillna(median, inplace=True) #Whatever this median value is, save it -> We will need it
+    #later to replace missing values in the test set
+
+
+    #Use Scikit-Learn modules to take care of missing values: SimpleInputer
+
+    #First, create instance of SimpleInputer and specify that you want to replace each attribute's missing values with
+    #the median of the attribute
+    imputer = SimpleImputer(strategy="median")
+
+
+    #Because the median can only be computed on numerical attributes, we need to copy the data without text attribute
+    #"ocean_proximity"
+    housing_num = housing.drop("ocean_proximity", axis=1)
+
+    #Now fit the Imputer instance to the training date using the fit() method
+    imputer.fit(housing_num) #<-- Computed the median of each attribute and stored the results in its statistics_
+    #instance variable
+
+    #Since only "total_bedrooms" attribute was missing date, it only computed median values for that attribute, but
+    #once the system goes live there can be more missing attributes, so it's better to apply the Imputer to all of the
+    #numerical attributes
+    print(imputer.statistics_)
+    print(housing_num.median().values) #<-- This is just checking to ensure manually computing the median of the
+    #attribute is the same as using the imputter.fit
+
+    #Replace missing values in training set by learned medians (Transform the training set)
+    #Note: 433 is the median of the "total_bedrooms" attribute
+    X = imputer.transform(housing_num)
+    print(imputer.strategy)
+
+    #The result is a plain Numpy array containing the transformed features. Now we can put it back into a Pandas
+    #DataFrame using the following:
+    housing_tr = pd.DataFrame(X, columns=housing_num.columns, index=housing.index) #housing_num does not include
+    #"ocean_proximity" attribute
+
+    print("\nThis is the housing.index values:")
+    print(housing.index)
+
+    #Since we already stored the incomplete rows in
+    #"sample_incomplete_rows", we're just checking to ensure those values were replaced with the median
+
+    #Recall: the ".loc" locates values in a Pandas DataFrame  <-- see documentation
+    print(housing_tr.loc[sample_incomplete_rows.index.values])
+
+    #NOTE: For pushing "bare" repo to Github: $ git remote add origin https://github.com/MSilberberg0619/Machine_Learning_Practice.git
+
+    #"ocean_proximity" was left out because it's a text attribute and so the median can't be computed
+    #To fix, convert these categories from text to numbers using Scikit-Learn's OrdinalEncoder class
+    housing_cat = housing[["ocean_proximity"]]
+    print(housing_cat.head(10))
+
+    ordinal_encoder = OrdinalEncoder()
+    housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat)
+    print(housing_cat_encoded)
+
+    #Can use one-hot encoding to map attributes to categories so the values of the attributes that are more similar
+    #will have similar encoded values
+    #We don't want the model to assume some natural ordering to the data --> could result in poor performance or
+    #unexpected results
+    cat_encoder = OneHotEncoder()
+    housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+    print(housing_cat_1hot)
+    housing_cat_1hot.toarray()
+    print(housing_cat_1hot)
+
+    #List of categories using the encoder's categories instance variable
+    print(cat_encoder.categories_)
+
+
+
+
+
