@@ -8,8 +8,9 @@ import numpy as np
 from zlib import crc32 #For compressing data...
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline
 
 ####################################################################################################
 #This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
@@ -272,3 +273,15 @@ if __name__ == "__main__":
     #Standardization of a dataset is a common requirement for many machine learning estimators: they might behave badly
     # if the individual features do not more or less look like standard normally distributed data
     # (e.g. Gaussian with 0 mean and unit variance).
+
+    #Scikit-Learn provides the "Pipeline" class to help with the sequence of transformations
+    num_pipeline = Pipeline([   #<-- Pipeline constructor takes a list of name/estimator pairs
+        ('imputer', SimpleImputer(strategy="median")),
+        ('attribs_adder', CombinedAttributesAdder()),
+        ('std_scaler', StandardScaler()),
+    ]) #<-- All but last estimator must be transformers (must have a fit_transform() method)
+
+    housing_num_tr = num_pipeline.fit_transform(housing_num) #Utilize numerical pipeline provided by "Pipeline" class
+
+    #Calling the "Pipeline's" fit method calls fit_method() sequentially on all transformers, passing the output of each
+    #call as the parameter to the next call, until it reaches the final estimator which then the fit() method is called
