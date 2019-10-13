@@ -503,4 +503,24 @@ if __name__ == "__main__":
 
     final_mse = mean_squared_error(y_test, final_predictions)
     final_rmse = np.sqrt(final_mse)
-    print(final_rmse)
+    print(final_rmse) #<-- Performance may be worse than what was resolved with cross-validation if you did a lot of
+    #hyperparameter tuning (end up with fine-tuned system that performs well on the validation data). However, if this
+    #happens, DON'T TWEAK THE HYPERPARAMETERS TO MAKE THE DATA LOOK GOOD ON THE TEST SET; the improvements may still
+    #not generalize to new data
+
+    ####################################################################################################################
+    #Now that the system is ready to launch, we need to plug in production input data sources and write tests. Also, we
+    #should monitoring code to check the system's live performance at regular intervals and trigger alerts when it
+    #drops --> Models tend to "rot" over time, unless the models are regularly trained on fresh data
+
+    #Next, we should sample the system's predictions and evaluate them to evaluate the system's performance, which will
+    #require a human analysis. There should be a human evaluation pipeline in the system.
+
+    #We should also evaluate the system's input quality --> drop in performance can sometimes be due to a poor quality
+    #signal (malfunctioning sensor reading etc.). By monitoring the system's inputs this degradation can be caught
+    #much earlier.
+
+    #Finally, we should train models on a regular basis using fresh data with an automated prcess --> if not, a sparsely
+    #refreshed model and drop in performance or performance fluctuations may occur. If it's an online learning system,
+    #it's a good idea to save snapshots of its state at regular intervals so we can go back to that state if needed.
+    ####################################################################################################################
