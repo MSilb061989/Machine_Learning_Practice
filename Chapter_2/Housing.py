@@ -6,7 +6,7 @@ from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 import numpy as np
 from zlib import crc32 #For compressing data...
-from sklearn.model_selection import train_test_split, StratifiedShuffleSplit, cross_val_score
+from sklearn.model_selection import train_test_split, StratifiedShuffleSplit, cross_val_score, GridSearchCV
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -15,6 +15,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 ####################################################################################################
 #This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
@@ -369,7 +370,7 @@ if __name__ == "__main__":
     lin_rmse_scores = np.sqrt(-lin_scores)
     print(lin_rmse_scores)
     print("Scores: ", lin_rmse_scores)
-    print("Mean: ", lin_rmse_scores.mean())
+    print("Mean: ", lin_rmse_scores.mean()) #<-- Ten different rmse errors
     print("Standard Deviation: ", lin_rmse_scores.std())
 
     #Decision Tree is overfitting so badly that it performs worse than the Linear Regression model
@@ -386,5 +387,57 @@ if __name__ == "__main__":
     #Essentially, 9 blocks of data are used for training and one for testing
     ##############################################################################################
 
+    #Try one more last model for now: RandomForestRegressor --> This is a Random Forest that works by training many
+    #Decision Trees on random subsets of the features, then averaging out their predictions.
+    forest_reg = RandomForestRegressor() #<-- Create an instance of the method from the Scikit-Learn package
+    forest_reg.fit(housing_prepared, housing_labels) #<-- Train the model
+    housing_predictions = forest_reg.predict(housing_prepared)  # <-- Test the trained model using the training set
+    forest_mse = mean_squared_error(housing_labels, housing_predictions)
+    forest_rmse = np.sqrt(forest_mse)
+    print(forest_rmse)
 
+    # Compute the same scores for the Random Forest model
+    forest_scores = cross_val_score(forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error",
+                                 cv=10)
+    forest_rmse_scores = np.sqrt(-forest_scores)
+    print(forest_rmse_scores)
+    print("Scores: ", forest_rmse_scores) #<-- Ten different rmse errors
+    print("Mean: ", forest_rmse_scores.mean())
+    print("Standard Deviation: ", forest_rmse_scores.std())
 
+    #NOTE: Building a model on top of manu other models is called Ensemble Learning
+    #The results show that the Random Forests perform better than the other two models, but the score on the training
+    #set is still much lower than on the validation sets, indicating that the model is still overfitting the training
+    #set. Some possible solutions to mitigate overfitting are as follows:
+    # 1.) Simplify the model
+    # 2.) Constrain it (regularize it)
+    # 3.) Get more training data
+
+    #Now it's time to fine-tune the list of selected models...
+    #One method is to use Scikit-Learn's GridSearchCV to search for viable hyperparameters --> Just tell the method
+    #which hyperparameters you want to experiment with and which values to try out and it will evaluate all the possible
+    #combinations of hyperparameters using cross-validation
+
+    #This code will search for the best combination of hyperparameter values for the RandomForestRegressor method
+
+    #The param_grid tells Scikit-Learn to first evaluate all 3 x 4 = 12 combinations of n_estimators and max_features
+    #hyperparameter values specified in the first dict (see first row in param_grid), then try all 2 x 3 = 6 combinations
+    #of hyperparameter values in the second dict (see second row in param_grid), but this time with the bootstrap
+    #hyperparameter set to False instead of True
+
+    #The grid search will ultimately explore 18 combinations of RandomForestRegressor hyperparameter values and will
+    #train each model five times (we are using five-fold cross validation). This results in a total of 18 x 5 = 90
+    #rounds of training!
+    param_grid = [
+        {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]},
+        {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]}, #n_estimators is used when you have
+        #have no idea what the hyperparameter values should be (one strategy is to try out consecutive power of 10)
+    ]
+
+    forest_reg = RandomForestRegressor()
+
+    grid_search = GridSearchCV(forest_reg, param_grid, cv=5,
+                               scoring='neg_mean_squared_error',
+                               return_train_score=True)
+
+    grid_search.fit(housing_prepared, housing_labels)
