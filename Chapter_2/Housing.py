@@ -441,3 +441,66 @@ if __name__ == "__main__":
                                return_train_score=True)
 
     grid_search.fit(housing_prepared, housing_labels)
+
+    print(grid_search.best_params_) #<-- The results are the maximum values that were evaluated, so we may want to
+    #search again
+    print(grid_search.best_estimator_)
+
+    #If GridSearchCV is intitialized with refit=True --> retrains the whole training set once it find the best
+    #estimator using cross-validation (usually a good performance boost)
+
+    cvres = grid_search.cv_results_
+    for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+        print(np.sqrt(-mean_score), params)
+
+    #The RMSE we obtained by iterating through the hyperparameter values is slightly better than the score we received
+    #from the default hyperparameter values. Thus we successfully fine-tuned the model
+
+    #We can also treat the data preparation steps as hyperparameter --> for example, we can determine whether to include
+    #a certain feature such as the "add_bedrooms_per_room", we can use this feature as a hyperparameter in the
+    #"CombinedAttributesAdder" transformer. We can also use it to determine how to handle outliers, missing features,
+    #feature selection and more
+
+    ####################################################################################################################
+    #Grid search is sufficient when we are exploring few combinations, but if the hyperparameter search space is
+    #large, we should use "RandomizedSearchCV" instead --> instead of trying out all possible combinations like when
+    #we used "GridSearchCV", we use a given number of random combinations by selecting a random value for each
+    #hyperparameter at every iteration. There are two benefits to this approach:
+    # 1.) If the randomized search runs for 1,000 iterations, this approach will explore 1,000 different values for
+    #     each hyperparameter
+    # 2.) We have more control over the computing budget you want to allocate to hyperparameter search just by
+    #     adjusting the number of iterations
+
+    #We can also use ensemble methods, such as the Random Forest instead of Decision Trees, to fine-tune the system
+    ####################################################################################################################
+
+    #We can gain insight by inspecting the best models and determine the relative importance of each attribute for
+    #making accurate predictions and drop less useful features.
+    # feature_importances = grid_search.best_estimator_
+    # # print(feature_importances)
+    #
+    # extra_attribs = ["rooms_per_household", "pop_per_household", "bedrooms_per_household"]
+    # cat_encoder = full_pipeline.named_transformers_["cat"]
+    # cat_one_hot_attribs = list(cat_encoder.categories_[0])
+    # attributes = num_attribs + extra_attribs + cat_one_hot_attribs
+    # sorted(zip(feature_importances, attributes), reverse=True)
+
+    #Once we have a system that performs well from tweaking the models, we can evaluate the final model on the test set
+    # To do this:
+    # 1.) Get the predictors and labels from the test set
+    # 2.) Run "full_pipeline()" to transform the data (call "transform()" not "fit_transform()") --> don't want to
+    #     fit the test set!
+    # 3.) Evaluate the final model on the test set
+
+    final_model = grid_search.best_estimator_
+
+    X_test = strat_test_set.drop("median_house_value", axis=1)
+    y_test = strat_test_set["median_house_value"].copy()
+
+    X_test_prepared = full_pipeline.transform(X_test)
+
+    final_predictions = final_model.predict(X_test_prepared)
+
+    final_mse = mean_squared_error(y_test, final_predictions)
+    final_rmse = np.sqrt(final_mse)
+    print(final_rmse)
