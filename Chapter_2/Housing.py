@@ -356,7 +356,8 @@ if __name__ == "__main__":
     #training on the other 9 folds (subsets). This results in an array containing the 10 evaluation scores
     scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error",
                              cv=10)
-    tree_rmse_scores = np.sqrt(-scores)
+    tree_rmse_scores = np.sqrt(-scores) #<-- Cross-validation expects a utility function instead of a cost function,
+    #so the scoring function os actually the OPPOSITE of the MSE (negative value)
     print(tree_rmse_scores)
     print("Scores: ", tree_rmse_scores)
     print("Mean: ", tree_rmse_scores.mean())
@@ -372,5 +373,18 @@ if __name__ == "__main__":
     print("Standard Deviation: ", lin_rmse_scores.std())
 
     #Decision Tree is overfitting so badly that it performs worse than the Linear Regression model
+
+    ################################### Aside ####################################################
+    #Cross-validation uses all of the data, one block at a time, to train a model and summarizes the
+    #results at the end
+
+    #In the end, every block of data is used for testing and we can compare methods by seeing how well
+    #they performed
+
+    #Can also use K-fold cross-validation to find the best value for a tuning parameter
+
+    #Essentially, 9 blocks of data are used for training and one for testing
+    ##############################################################################################
+
 
 
