@@ -6,13 +6,15 @@ from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 import numpy as np
 from zlib import crc32 #For compressing data...
-from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+from sklearn.model_selection import train_test_split, StratifiedShuffleSplit, cross_val_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.tree import DecisionTreeRegressor
 
 ####################################################################################################
 #This block of code is because Scikit-Learn 0.20 replaced sklearn.preprocessing.Imputer class with
@@ -306,7 +308,6 @@ if __name__ == "__main__":
     #2.) Categorical columns should be transformed using a OneHotEncoder
     #Apply this ColumnTransformer to the housing data --> applies each transformer to the appropriate columns and
     #concatenates the outputs along the second axis
-
     housing_prepared = full_pipeline.fit_transform(housing)
 
     #Train a Machine Learning model using linear regression
@@ -322,3 +323,54 @@ if __name__ == "__main__":
     print("Labels: ", list(some_labels))
 
     #Measure the regression model's RMSE on the whole training set using Scikit-Learn's "mean_squared_error" function
+    housing_predictions = lin_reg.predict(housing_prepared)
+    lin_mse = mean_squared_error(housing_labels, housing_predictions)
+    lin_rmse = np.sqrt(lin_mse)
+    print(lin_rmse) #<-- Model underfit the training data... (median_housing_values is between $120,000 and $265,000)
+
+    #The underfitting of the model says two things:
+    #1.) The features do not provide enough information to make good predictions
+    #2.) The model is not powerful enough
+
+    #Try to train with a DecisionTreeRegressor --> This is a powerful model that is capable of finding nonlinear
+    #relationships in the data (Decision Trees will be presented in more detail in Chapter 4)
+    tree_reg = DecisionTreeRegressor()
+    tree_reg.fit(housing_prepared, housing_labels) #<-- Training the model
+
+    housing_predictions = tree_reg.predict(housing_prepared) #<-- Test the trained model using the training set
+    tree_mse = mean_squared_error(housing_labels, housing_predictions)
+    tree_rmse = np.sqrt(tree_mse)
+    print(tree_rmse)
+
+    #This gave an error of zero, but this is likely not possible. It is more likely that the model badly overfit the
+    #data. What'st he reason we believe this: Earlier, it was discussed that we don't want to touch the test set until
+    #we're ready to launch, so we should instead use part of the training set for training and part for model validation
+
+    #One way to evaluate the Decision Tree model would be to use the train_test_split function to split the
+    #training set into a smaller training set and a validation set, then train the models against the smaller
+    #training set and evaluate them against the validation set
+
+    #An alternative is to use Scikit-Learn's "cross-validation" feature that performs K-fold cross validation
+    #K-fold cross validation: Randomly splits the training set into 10 distinct subsets (folds), then it trains and
+    #evaluates the Decision Tree model 10 times, picking a different fold (subset) every evaluation time and
+    #training on the other 9 folds (subsets). This results in an array containing the 10 evaluation scores
+    scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error",
+                             cv=10)
+    tree_rmse_scores = np.sqrt(-scores)
+    print(tree_rmse_scores)
+    print("Scores: ", tree_rmse_scores)
+    print("Mean: ", tree_rmse_scores.mean())
+    print("Standard Deviation: ", tree_rmse_scores.std())
+
+    #Compute the same scores for the Linear Regression model
+    lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error",
+                                 cv=10)
+    lin_rmse_scores = np.sqrt(-lin_scores)
+    print(lin_rmse_scores)
+    print("Scores: ", lin_rmse_scores)
+    print("Mean: ", lin_rmse_scores.mean())
+    print("Standard Deviation: ", lin_rmse_scores.std())
+
+    #Decision Tree is overfitting so badly that it performs worse than the Linear Regression model
+
+
