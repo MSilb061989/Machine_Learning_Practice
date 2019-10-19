@@ -170,6 +170,7 @@ if __name__ == "__main__":
     housing = strat_train_set.drop("median_house_value", axis=1) #Drop "median_house_value" from training set and creates a copy of the training set
     ###NOTE: I believe "median_house_value" was dropped because we are separating the predictors and labels...###
     print(housing)
+    #Create a copy of the "median_house_value" attribute and make it the target
     housing_labels = strat_train_set["median_house_value"].copy()
     print(housing.info())
 
