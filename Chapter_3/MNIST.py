@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score, cross_val_predict
 from sklearn.base import clone, BaseEstimator
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
 mnist = fetch_openml('mnist_784', version=1)
 print(mnist.keys())
@@ -182,3 +182,20 @@ print(conf_matrix_perfect) # <- perfect confusion matrix
 #TPR: this is the ratio of positive instances that are correctly detected by the classifier
 #           recall = TP/TP+FN
             #FN: number of false negatives (see page 88 for a qualitative view of a confusion matrix)
+
+#Scikit-Learn provides other functions to compute classifier metrics, including precision and recall
+prec_score = precision_score(y_train_5, y_train_pred)
+print(prec_score) # Should equal 4344/(4344 + 1307)
+reca_score = recall_score(y_train_5, y_train_pred)
+print(reca_score) # Should equal 4344/(4344 + 1077)
+#These metrics evaluate how well we predicted when the classifier detected an image of a 5
+
+#We can also use the F1 Score to combine precision and recall into a single metric -> this is a simple way to compare
+#two classifiers. The F1 score is the harmonic mean of precision and recall, shown as follows:
+#           #F1 = 2/ (1/precision + 1/recall)) = 2 x (precision x recall) / (precision + recall) = TP / (TP + (FN + FP)/2)
+#The harmonic mean is typically expressed as the reciprocal of the arithmetic mean of the reciprocals of a particular
+#observation -> Example: the harmonic mean of 1, 4 and 4 = (3 / ((1/4) + (1/1) + (1/4)) = 2
+
+#We can compute the F1 score by using the f1_score() function
+f1_scores_class = f1_score(y_train_5, y_train_pred)
+print(f1_scores_class)
