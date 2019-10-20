@@ -199,3 +199,17 @@ print(reca_score) # Should equal 4344/(4344 + 1077)
 #We can compute the F1 score by using the f1_score() function
 f1_scores_class = f1_score(y_train_5, y_train_pred)
 print(f1_scores_class)
+#################################Notes About F1 Score###################################################################
+#F1 score favors classifiers that have similar precision and recall -> however, sometimes we
+#care more about precision and sometimes we care more about recall
+
+#Example: if we trained a classifier to detect videos that are safe for kids, you would prefer a classifier that rejects
+#many good videos (low recall) but keeps only safe ones (high precision), rather than a classifier that allows a few
+#bad videos in but has a high recall (we can even add a human pipeline to check the classifier's video selection)
+
+#Example: if we train a classifier to detect shoplifters on surveillance images, we would be fine with 30% precision
+#as long as it has 99% recall (the security guards will get a few false alerts but all shoplifters will be caught)
+
+#Unfortunately, we can't have it both way and often have to find a trade-off between precision and recall -> increasing
+#precision reduces recall and vice versa ----> this is known as precision/recall tradeoff
+########################################################################################################################
