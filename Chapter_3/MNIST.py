@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
-from sklearn.base import clone
+from sklearn.base import clone, BaseEstimator
 
 mnist = fetch_openml('mnist_784', version=1)
 print(mnist.keys())
@@ -81,7 +81,7 @@ print(sgd_clf.predict([some_digit])) #some_digit was the first instance and is i
 #Creating home-grown cross validation function
 skfolds = StratifiedKFold(n_splits=3, random_state=42) #How many different folds (3)
 
-for train_index, test_index in skfolds.split(X_train, y_train):
+for train_index, test_index in skfolds.split(X_train, y_train_5):
     clone_clf = clone(sgd_clf) #Clone creates a deep copy of the model in the estimator without actually copying
     #attached data -> yields new estimator with the same parameters that has not been fit to any data
     #A deep copy copies all fields and makes copies of dynamically allocated memory pointed to by the fields. A deep
@@ -121,3 +121,23 @@ print(scoreCV)
 #This function gives 95% accuracy (ratio of correct predictions) on all cross-validation folds! However, this is not
 #entirely correct -> need to ensure that we are, in fact, predicting at 95% accurate. We can do this by constructing
 #a dumb classifier that classifies every single image in the "not a five" class
+class Never5Classifier(BaseEstimator): #BaseEstimator is the base class for all estimators in Scikit-Learn
+#This base class enables to set and get parameters of the estimators. More specifically, BaseEstimator provides an
+#implementation of the get_params and set_params methods -> Why is this needed? It can make a model applicable to
+#GridSearchCV, which ensures it behaves well when placed in a pipeline
+#GridSearchCV is one of the generic approaches to sampling search parameter candidates, such as hyper-parameters which
+#are not directly learnt within estimators
+    def fit(self, X, y=None):
+        pass
+    def predict(self, X):
+        return np.zeros((len(X), 1), dtype=bool)
+
+#"Now we try and guess the "Never5Classifier" model accuracy
+never_5_clf = Never5Classifier()
+scoreCV = cross_val_score(never_5_clf, X_train, y_train_5, cv=3, scoring="accuracy")
+print(scoreCV) #The results, according to book, is 0.909, 0.90715 and 0.9128 -> Over 90% accurate
+#What this tells us is that it has over 90% accuracy -> this is simply because only about 10% of the images are 5's.
+#Therefore, if you always guess that an image is NOT a 5 you would be right 90% of the time
+
+#IMPORTANT: This tells us that accuracy is not the preferred performance metric for classifiers, especially when
+#dealing with skewed datasets (skewed datasets are those where some classes appear much more frequency than others)
