@@ -3,8 +3,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, cross_val_predict
 from sklearn.base import clone, BaseEstimator
+from sklearn.metrics import confusion_matrix
 
 mnist = fetch_openml('mnist_784', version=1)
 print(mnist.keys())
@@ -141,3 +142,43 @@ print(scoreCV) #The results, according to book, is 0.909, 0.90715 and 0.9128 -> 
 
 #IMPORTANT: This tells us that accuracy is not the preferred performance metric for classifiers, especially when
 #dealing with skewed datasets (skewed datasets are those where some classes appear much more frequency than others)
+
+#A better way to evaluate the performance of a classifier is to evaluate the confusion matrix -> the idea behind the
+#confusion matrix is to count the number of times instances of class A are classified as class B.
+#As an example: to understand the number of times the classifier confused images of 5's with 3's, you would look in
+#the 5th row and 3rd column of the confusion matrix
+
+#To compute the confusion matrix, we first need a set of predictions that can then be compared with the actual targets
+#Recall: DON'T TOUCH THE TEST SET (we save that for the end). We, instead, use the cross_val_predict() function
+y_train_pred = cross_val_predict(sgd_clf, X_train, y_train_5, cv=3) #cross_val_predict performs K-fold cross-validation,
+#similar to cross_val_score(), but instead of returning the evaluation scores it returns the predictions made on each
+#fold -> we can get a clean prediction for each instance in the training set (70,000 instances in this dataset) ->
+#clean means that the prediction is made by a model that never saw the data during training
+
+#Use the confusion_matrix() function by passing it the target class (y_train_5) and the predicted classes (y_train_pred)
+conf_matrix = confusion_matrix(y_train_5, y_train_pred)
+print(conf_matrix)
+#Each row in confusion matrix is an actual class and each column is a predicted class
+#The first row considers non-5 images (negative class) -> the (0,0) position are correctly classified as non-5's (called true
+#negatives -> 53892)
+#The (0,1) position were wrongly classifed as 5's (687)
+#The second row consider the images of 5's (positive class) -> 1891 were wrongly classified as non-5's (false negatives
+#-> (1,0) position)
+#The (1,1) position are correctly classified images of 5's (3530 -> true positives)
+#A perfect classifier would have only true positives and true negatives, so the confusion matrix would only have nonzero
+#values on its main diagonal
+y_train_perfect_predictions = y_train_5
+conf_matrix_perfect = confusion_matrix(y_train_5, y_train_perfect_predictions)
+print(conf_matrix_perfect) # <- perfect confusion matrix
+#A more concise metric would be to look at the accuracy of the positive predictions, which is called the precision
+#of the classifier -> The equation is:
+#           precision = TP/TP+FP
+#           TP: number of true positives
+#           FP: number of false positives
+#One way that is trivial to have perfect precision is to make one single positive prediction and ensure it is correct
+# -> (precision = 1/1 = 100%) -> however this is not very useful since the classifier would ignore all but one
+#positive instance. Instead, precision is typically used along with another metric called recall, or sensitivity or
+#true positive rate (TPR)
+#TPR: this is the ratio of positive instances that are correctly detected by the classifier
+#           recall = TP/TP+FN
+            #FN: number of false negatives (see page 88 for a qualitative view of a confusion matrix)
