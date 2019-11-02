@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score, cross_val_predict
 from sklearn.base import clone, BaseEstimator
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve
 
 mnist = fetch_openml('mnist_784', version=1)
 print(mnist.keys())
@@ -214,4 +214,40 @@ print(f1_scores_class)
 #precision reduces recall and vice versa ----> this is known as precision/recall tradeoff
 ########################################################################################################################
 
-#Test...
+#Call decision_function() instead of predict() since we can't set decision threshold directly but can access decision
+#scores. This function returns a score for each instance (recall, we have 70,000 instances for 70,000 images) and
+#makes predictions based on those scores using any desired threshold
+
+y_scores = sgd_clf.decision_function([some_digit]) #some_digit is the first instance and is the image "5"
+print(y_scores)
+threshold = 0 #Threshold is essentially zero
+y_some_digit_pred = (y_scores > threshold)
+print(y_some_digit_pred)
+
+#Raise the threshold for the decision function...
+threshold = 200000
+y_some_digit_pred = (y_scores > threshold)
+print(y_some_digit_pred)
+
+#Raising the threshold decreases recall. So how do we decide which threshold to use? --> First get the scores of all
+#instances in the training set using the cross_val_predict() function but have it return decision scores instead of
+#predictions
+y_scores = cross_val_predict(sgd_clf, X_train, y_train_5, cv=3, method="decision_function") #Return decision scores
+#for all instances in the training set --> allow us to compute possible precision and recall for all possible
+#thresholds
+
+#Use precision_recall_curve() function to plot precision and recall as a function of threshold
+
+#Function to plot precision and recall as a function of threshold
+def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
+    plt.plot(thresholds, precisions[:-1], "b--", label="Precision")
+    plt.plot(thresholds, recalls[:-1], "g--", label="Recall")
+    plt.xlabel("Threshold")
+    plt.legend(loc="center left")
+    plt.ylim([0, 1])
+
+precisions, recalls, thresholds = precision_recall_curve(y_train_5, y_scores)
+plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
+plt.show()
+plt.figure()
+plt.show(plt.plot(recalls, precisions))
