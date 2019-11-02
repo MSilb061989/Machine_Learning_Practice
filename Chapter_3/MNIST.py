@@ -5,7 +5,8 @@ import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score, cross_val_predict
 from sklearn.base import clone, BaseEstimator
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve, roc_curve, roc_auc_score
+from sklearn.ensemble import RandomForestClassifier
 
 mnist = fetch_openml('mnist_784', version=1)
 print(mnist.keys())
@@ -251,3 +252,54 @@ plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
 plt.show()
 plt.figure()
 plt.show(plt.plot(recalls, precisions))
+
+#If we aim for a certain precision or recall, we can reference the plot and settle on a threshold --> instead of
+#calling the classifier's predict function we can just run the following code
+y_train_pred_90 = (y_scores > 70000) #70000 was the threshold that was decided upon based on plot
+
+#Check prediction's precision and recall:
+print(precision_score(y_train_5, y_train_pred_90)) #Roughly 90% precision classifier...but the recall is really low :(
+
+print(recall_score(y_train_5, y_train_pred_90))
+
+#Plot ROC curve, which is sensitivity versus 1-specificity -->
+#Plot recall against ratio negative instances incorrectly classified as positive (equal to 1-true negative rate)
+fpr, tpr, thresholds = roc_curve(y_train_5, y_scores) #fpr is the ratio of negative instances that are incorrectly
+#classified as positive and is 1-tnr (tnr = ratio of negative instances that are correctly classified as negative)
+
+#Function that plots the FPR against the TPR (false positive rate versus true positive rate)
+def plot_roc_curve(fpr, tpr, label=None):
+    plt.plot(fpr, tpr, linewidth=2, label=label)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.axis([0, 1, 0, 1])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+
+plot_roc_curve(fpr, tpr)
+plt.show()
+
+#What is the trade-off here? Well, from the plot above the higher the recall (true positive rate) the more false
+#positives (FPR) the classifier produces
+#A good classifier won't get near the dotted line in the plot (toward the top left corner)
+
+#Compute area under the curve for ROC curve (perfect classifier has ROC AUC = 1 and pure random one will have value = 0.5)
+print(roc_auc_score(y_train_5, y_scores))
+
+#Now we will train a RandomForestClassifier and compare its ROC and PR curve to the SGDClassifier
+#Since it has predict_proba() instead of a decision_function(), we can't get the scores for each instance but can
+#instead get an array of probabilities where each row has in each class a probability that the value represents the
+#desired target (ex: 70% chance that the image represents a 5 etc.)
+forest_clf = RandomForestClassifier(random_state=42)
+y_probas_forest = cross_val_predict(forest_clf, X_train, y_train_5, cv=3,
+                                    method="predict_proba")
+
+#Need scores, not probabilities, to plot ROC curve...
+#Solution? Use the positiv class's probability as the score
+y_scores_forest = y_probas_forest[:,1] #score = proba of positve class
+fpr_forest, tpr_forest, threshold_forest = roc_curve(y_train_5,y_scores_forest)
+
+#Plot ROC curve
+plt.plot(fpr, tpr, label="SGD")
+plot_roc_curve(fpr_forest, tpr_forest, "Random Forest")
+plt.legend(loc="lower right")
+plt.show()
