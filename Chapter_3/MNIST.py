@@ -303,3 +303,27 @@ plt.plot(fpr, tpr, label="SGD")
 plot_roc_curve(fpr_forest, tpr_forest, "Random Forest")
 plt.legend(loc="lower right")
 plt.show()
+
+#The RandomForestClassifier has a better looking ROC curve (closer to top-left corner) and also has a better ROC_AUC
+#score
+print(roc_auc_score(y_train_5, y_scores_forest))
+
+#Scikit-Learn recognizing the use of a binary classifier for a multiclass classification task and will automatically
+#run OvA (except for SVM --> uses OvO)
+
+sgd_clf.fit(X_train, y_train) #y_train, not y_train_5
+print(sgd_clf.predict([some_digit]))
+
+#The code trained the SGDClassifier on the training set using the original target classes (0-9) instead of the 5-versus-
+#target classes (y_train_5) and makes a prediction
+#Scikit-Learn trained 10 binary classifiers, got their decision scores for the image and selected the class with the
+#highest score
+
+#Calling the decision_functio() will show this byu returning 10 scores, on per class instead of just one score
+some_digit_scores = sgd_clf.decision_function([some_digit])
+print(some_digit_scores) #The highest score will indeed be the correct class ("5")
+
+#The highest score from the array output above will be the correct class ("5") and is proven with the code below
+print(np.argmax(some_digit_scores))
+print(sgd_clf.classes_)
+print(sgd_clf.classes_[5])
