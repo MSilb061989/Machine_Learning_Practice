@@ -7,6 +7,8 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score, cross_val_
 from sklearn.base import clone, BaseEstimator
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve, roc_curve, roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.multiclass import OneVsOneClassifier
+from sklearn.preprocessing import StandardScaler
 
 mnist = fetch_openml('mnist_784', version=1)
 print(mnist.keys())
@@ -327,3 +329,48 @@ print(some_digit_scores) #The highest score will indeed be the correct class ("5
 print(np.argmax(some_digit_scores))
 print(sgd_clf.classes_)
 print(sgd_clf.classes_[5])
+
+#Can force either OvO or OvA strategy by creating instance of these classes and passing a binary classifier to it, as
+#seen in this code
+ovo_clf = OneVsOneClassifier(SGDClassifier(random_state=42)) #Create instance of OvO class and pass SGDClassifier
+ovo_clf.fit(X_train, y_train) #Classification on all target classes (0 through 9)
+print(ovo_clf.predict([some_digit]))
+print(len(ovo_clf.estimators_))
+
+#Can also train a RandomForestClassifier
+forest_clf.fit(X_train, y_train)
+print(forest_clf.predict([some_digit]))
+#Scikit-Learn didn't need to run OvA or OvO because Random Forest classifiers can directly classify multiple classes
+#We can call predict_proba() to get a list of the probabilities that the classifier assigned to each instance for each
+#class
+print(forest_clf.predict_proba([some_digit])) #Model is highly confident that a "5" is indeed a "5" (can also be other
+#values according to non-zero probabilities)
+
+#We should also evaluate these classifiers using cross-validation. We'll do that on SGDClassifier:
+print(cross_val_score(sgd_clf, X_train, y_train, cv=3, scoring="accuracy")) #This should get over 84% on all test folds
+#A random classifier would give close to 10%
+
+#Scaling the inputs will give accuracy close to 90%
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train.astype(np.float64))
+print(cross_val_score(sgd_clf, X_train_scaled, y_train, cv=3, scoring="accuracy")) #This should be close to 90% with the
+#input scaled
+
+#If a suitable model has been found after fine-tuning the hyperparameters using GridSearchCV, we can analyze the errors
+#by making predictions with cross_val_predict() and calling a confusion matrix with confusion_matrix() as before:
+y_train_pred = cross_val_predict(sgd_clf, X_train_scaled, y_train, cv=3)
+conf_mx = confusion_matrix(y_train, y_train_pred)
+print(conf_mx)
+#Look at the image representation of the confusion matrix
+plt.matshow(conf_mx, cmap=plt.cm.gray)
+plt.show()
+
+#Compare relative error values by dividing each value in the confusion matrix by the number of images in the
+#corresponding class (compare error rates) --> normalize values
+row_sums = conf_mx.sum(axis=1, keepdims=True)
+norm_conf_mx = conf_mx / row_sums
+
+#Fill the diagonal with zeros to keep only the errors
+np.fill_diagonal(norm_conf_mx, 0)
+plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
+plt.show()
