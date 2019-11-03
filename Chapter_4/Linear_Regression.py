@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 #Linear Regression Example
 X = 2 * np.random.rand(100, 1)
@@ -25,3 +26,23 @@ plt.plot(X, y, "b.")
 plt.show()
 #NOTE: np.c_ function concatenates along the column vector. So if we have a column vector x and a column vector y, using
 #np.c(x, y) will return a matrix with x as the first column and y as the second column
+
+#Now we can perform Linear Regression using Scikit-Learn
+lin_reg = LinearRegression()
+lin_reg.fit(X, y)
+print(lin_reg.intercept_, lin_reg.coef_)
+print(lin_reg.predict(X_new))
+#LinearRegression class is based on the scipy.linalg.lstsq() function ("Least Squares"). We can call this function
+#directly
+theta_best_svd, residuals, rank, s = np.linalg.lstsq(X_b, y, rcond=1e-6)
+print(theta_best_svd) #This function computes theta_hat = (X^+)y --. X^+ is the pseudoinverse of X (Moore-Penrose
+#inverse). We can use np.linalg.pinv() to compute the pseudoinverse directly:
+print(np.linalg.pinv(X_b).dot(y))
+
+#The pseudoinverse is computed using Singular Value Decomposition (SVD). It can decompose the training set matrix X
+#into the matrix multiplication of three matrices (U Sigma and V^T). The pseudoinverse X^+ is computed as
+#   X^+ = Vsigma^+U^T, where for sigma^+ the algorithm takes sigma and sets to zero all values smaller than a tiny
+#threshold value and replaces all the non-zero values with their inverse and finally transposes the resulting matrix.
+#This approach is more efficient than computing the Normal Equation and handles edge cases nicely
+#NOTE: the Normal Equation many not work if X^TX is not invertible (singular), such as if some features are redundant
+#HOWEVER: the pseudoinverse is ALWAYS defined!
