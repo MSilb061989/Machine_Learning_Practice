@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 
 #Linear Regression Example
 X = 2 * np.random.rand(100, 1)
@@ -102,3 +106,59 @@ print(theta)
 sgd_reg = SGDRegressor(max_iter=50, penalty=None, eta0=0.01)
 sgd_reg.fit(X, y.ravel())
 print(sgd_reg.intercept_, sgd_reg.coef_)
+
+#We can utilize linear models for nonlinear data by adding powers to each feature --> this is called Polynomial
+#Regression and will be explored below
+
+#First, we generate some nonlinear data
+m = 100
+X = 6 * np.random.rand(m, 1) - 3
+y = 0.5 * X**2 + X + 2 + np.random.randn(m, 1)
+plt.show(plt.plot(X, y, "b.")) #Nonlinear dataset
+
+#Use PolynomialFeatures from Scikit-Learn to transform the training data by adding the square (2nd degree polynomial)
+#of each feature in the training set as new features
+poly_features = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly_features.fit_transform(X)
+print(X[0])
+print(X_poly[0]) #X_poly now contains the original feature plus the square of the feature. Now we can fit a
+#LinearRegression model to the extended training data
+lin_reg = LinearRegression()
+lin_reg.fit(X_poly, y)
+print(lin_reg.intercept_, lin_reg.coef_)
+
+#We can use learning curves to determine if a model is underfitting or overfitting the data by training the model
+#several times on different sized subsets of the training set. The following code defines a function that plots the
+#learning curves of a model given some training data
+def plot_learning_curves(model, X, y):
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
+    train_errors, val_errors = [], []
+    for m in range(1, len(X_train)):
+        model.fit(X_train[:m], y_train[:m])
+        y_train_predict = model.predict(X_train[:m])
+        y_val_predict = model.predict(X_val)
+        train_errors.append(mean_squared_error(y_train[:m], y_train_predict))
+        val_errors.append(mean_squared_error(y_val, y_val_predict))
+    plt.plot(np.sqrt(train_errors), "r-+", linewidth = 2, label="train")
+    plt.plot(np.sqrt(val_errors), "b-", linewidth=3, label="val")
+    plt.show()
+
+lin_reg = LinearRegression()
+plot_learning_curves(lin_reg, X, y)
+
+#What is going here in te results? When there just one or two instances in the training set the model can fit them
+#perfectly, but as new instances are added to the training set  it becomes impossible for the model to fit the training
+#data because of the noise in the data and because it is not linear --> therefore the error goes up until it reaches
+#a plateau where adding new instances to the training set doesn't make the average error much better or worse
+
+#Now considering the validation data, when the model is trained on just a few instances it is incapable of
+#generalizing properly leading to a large validation error but learns as it is shown more training examples, reducing
+#the error
+
+#Now we look at the learning curves for a 10th degree polynomial
+polynomial_regression = Pipeline([
+    ("poly_features", PolynomialFeatures(degree=10, include_bias=False)),
+    ("lin_reg", LinearRegression())
+])
+
+plot_learning_curves(polynomial_regression, X, y)
