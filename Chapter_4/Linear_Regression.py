@@ -275,6 +275,65 @@ log_reg.fit(X, y) #Trained a Logistic Regression model based on the pedal sizes 
 #Now, we look at the model's esimated probabilities for flowers with petal widths varying from 0 to 3 cm
 X_new = np.linspace(0, 3, 1000).reshape(-1, 1) #Create an evenly spaced vector with values from 0 to 3
 y_proba = log_reg.predict_proba(X_new) #Do the values in X_new pertain to a width that means an Iris-Virginica or not?
-plt.plot(X_new, y_proba[:, 1], "g-", label="Iris-Virginica")
-plt.plot(X_new, y_proba[:, 0], "b--", label="Not Iris-Virginica")
+decision_boundary = X_new[y_proba[:, 1] >= 0.5][0]
+
+plt.figure(figsize=(8, 3))
+plt.plot(X[y==0], y[y==0], "bs")
+plt.plot(X[y==1], y[y==1], "g^")
+plt.plot([decision_boundary, decision_boundary], [-1, 2], "k:", linewidth=2)
+plt.plot(X_new, y_proba[:, 1], "g-", linewidth=2, label="Iris-Virginica")
+plt.plot(X_new, y_proba[:, 0], "b--", linewidth=2, label="Not Iris-Virginica")
+plt.text(decision_boundary+0.02, 0.15, "Decision  boundary", fontsize=14, color="k", ha="center")
+plt.arrow(decision_boundary, 0.08, -0.3, 0, head_width=0.05, head_length=0.1, fc='b', ec='b')
+plt.arrow(decision_boundary, 0.92, 0.3, 0, head_width=0.05, head_length=0.1, fc='g', ec='g')
+plt.xlabel("Petal width (cm)", fontsize=14)
+plt.ylabel("Probability", fontsize=14)
+plt.legend(loc="center left", fontsize=14)
+plt.axis([0, 3, -0.02, 1.02])
+# save_fig("logistic_regression_plot") Need function from his Github for this to work...
+plt.show()
+
+#Decision Boundary at 1.6 cm where the probability that it is an Iris-Virginica and not an Iris-Viriginica are equally
+#likely (equal to 50%)
+print(log_reg.predict([[1.7], [1.5]])) #1.7 should result in "1" since the classifier is sure above 1.6 cm the flower
+#is an Iris-Viriginica and should be a "0" for 1.5 since below 1.6 cm the classifier is confident the flower is not
+#an Iris-Virginica
+#Output is, indeed, [1 0]
+
+#The code below, taken straight from the Github, uses Logistic Regression to find the probability of whether a flower
+#is an Iris-Virginica based on two features -> the dashed line in the figure represents the 50% probability point is
+#called the Decision Boundary. It is a parallel line because it is a linear boundary and each parallel line represents
+#the points where the model outputs a specific probability, from 15% at the bottom left to 90% at top right. All flowers
+#beyond the top-right line have an over 90% chance of being Iris-Virginica according to the model
+X = iris["data"][:, (2,3)]
+
+lop_reg = LogisticRegression(solver="liblinear", C=10**10, random_state=42)
+log_reg.fit(X, y)
+
+x0, x1 = np.meshgrid(
+    np.linspace(2.9, 7, 500).reshape(-1, 1),
+    np.linspace(0.8, 2,7, 200).reshape(-1, 1),
+)
+X_new = np.c_[x0.ravel(), x1.ravel()]
+
+y_proba = log_reg.predict_proba(X_new)
+
+plt.figure(figsize=(10,4))
+plt.plot(X[y==0, 0], X[y==0, 1], "bs")
+plt.plot(X[y==1, 0], X[y==1, 1], "g^")
+
+zz = y_proba[:, 1].reshape(x0.shape)
+contour = plt.contour(x0, x1, zz, cmamp=plt.cm.brg)
+
+left_right = np.array([2.9, 7])
+boundary = -(log_reg.coef_[0][0] * left_right + log_reg.intercept_[0]) / log_reg.coef_[0][1]
+
+plt.clabel(contour, inline=1, fontsize=12)
+plt.plot(left_right, boundary, "k--", linewidth=3)
+plt.text(3.5, 1.5, "Not Iris-Virginica", fontsize=14, color="b", ha="center")
+plt.text(6.5, 2.3, "Iris-Virginica", fontsize=14, color="g", ha="center")
+plt.xlabel("Petal length", fontsize=14)
+plt.ylabel("Petal width", fontsize=14)
+plt.axis([2.9, 7, 0.8, 2.7])
+# save_fig("logistic_regression_contour_plot") #Gotta download that function off of Github... :/
 plt.show()
