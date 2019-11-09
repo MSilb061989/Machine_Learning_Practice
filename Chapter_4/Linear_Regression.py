@@ -1,10 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression, SGDRegressor, Ridge
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression, SGDRegressor, Ridge, Lasso, ElasticNet, LogisticRegression
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.base import clone
+from sklearn import datasets
 
 #Linear Regression Example
 X = 2 * np.random.rand(100, 1)
@@ -215,3 +217,64 @@ print(sgd_reg.predict([[1.5]]))
 #(typically ten-fold Cross Validation) to determine which one minimizes variance
 
 #Think of Regularization term as a penalty...
+
+#Here is a small example using the Lasso class (we could also use an SGDRegressor(penalty="l1"))
+lasso_reg = Lasso(alpha=0.1)
+lasso_reg.fit(X, y)
+print(lasso_reg.predict([[1.5]]))
+
+#Example of Elastic Net (l1_ratio is the mix ratio)
+elastic_net = ElasticNet(alpha=0.1, l1_ratio=0.5)
+elastic_net.fit(X, y)
+print(elastic_net.predict([[1.5]]))
+
+#Recall: An epoch is an instance of training on Gradient Descent "m" number of times
+#Below is an implementation of Early Stopping
+
+#Prepare the data
+
+X_train, X_val, y_train, y_val = train_test_split(X[:50], y[:50].ravel(), test_size=0.5, random_state=10) #Got this
+#from Geron's Github
+
+poly_scaler = Pipeline([
+    ("poly_features", PolynomialFeatures(degree=90, include_bias=False)),
+    ("std_scaler", StandardScaler())
+])
+X_train_poly_scaled = poly_scaler.fit_transform(X_train)
+X_val_poly_scaled = poly_scaler.transform(X_val)
+
+sgd_reg = SGDRegressor(max_iter=1, tol=-np.infty, warm_start=True, penalty=None, learning_rate="constant", eta0=0.0005)
+
+minimum_val_error = float("inf")
+best_epoch = None
+best_model = None
+for epoch in range(1000):
+    sgd_reg.fit(X_train_poly_scaled, y_train) #Continues where it left off
+    y_val_predict = sgd_reg.predict(X_val_poly_scaled)
+    val_error = mean_squared_error(y_val, y_val_predict)
+    if val_error < minimum_val_error:
+        minimum_val_error = val_error
+        best_epoch = epoch
+        best_model = clone(sgd_reg)
+
+print(best_epoch, best_model)
+#numpy.ravel() flattens a multi-dimensional array into a 1-D array
+
+#Now, using Logistic Regression, we will build a classifier to detect the Iris-Virginica type flower based on the
+#pedal width feature. This is from the "Iris Dataset"
+iris = datasets.load_iris()
+print(list(iris.keys()))
+X = iris["data"][:, 3:] #petal width
+print(iris["data"])
+y = (iris["target"] == 2).astype(np.int) #1 if Iris-Virginica, else0
+
+#Now, train a Logistic Regression model
+log_reg = LogisticRegression()
+log_reg.fit(X, y) #Trained a Logistic Regression model based on the pedal sizes (0.2 - 1.5?) from the dataset above
+
+#Now, we look at the model's esimated probabilities for flowers with petal widths varying from 0 to 3 cm
+X_new = np.linspace(0, 3, 1000).reshape(-1, 1) #Create an evenly spaced vector with values from 0 to 3
+y_proba = log_reg.predict_proba(X_new) #Do the values in X_new pertain to a width that means an Iris-Virginica or not?
+plt.plot(X_new, y_proba[:, 1], "g-", label="Iris-Virginica")
+plt.plot(X_new, y_proba[:, 0], "b--", label="Not Iris-Virginica")
+plt.show()
