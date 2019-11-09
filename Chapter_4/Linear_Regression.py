@@ -184,7 +184,7 @@ sgd_reg = SGDRegressor(penalty="l2") #L2 norm, NOT 12!
 sgd_reg.fit(X, y.ravel())
 print(sgd_reg.predict([[1.5]]))
 
-#The penalty hyperparameter sets the type of regularization to use -> in this case the L2, the L2 norm, indicates that
+#The penalty hyperparameter sets the type of regularization to use -> in this case L2, the L2 norm, indicates that
 #you want SGD to add a regularization term to the cost function which is half the square of the L2 norm of the weight
 #vector --> this is simply Ridge Regression
 
@@ -193,3 +193,25 @@ print(sgd_reg.predict([[1.5]]))
 #   1.) Learning rate for training a neural network
 #   2.) C and sigma hyperparameters for Support Vector Machines
 #   3.) The "K" in K-Nearest Neighbors
+#Note: A model parameter is a configuration variable that is internal to the model and whose value can be estimated
+#from the data
+#   1.) They are required by the model when making predictions
+#   2.) The values define the skill of the model on your problem
+#   3.) They are estimated or learned from the data
+#   4.) They are often NOT manually set by the practitioner
+#   5.) They are often saved as part of the learned model
+#Model parameters are the part of the model that are learned from historical training data (in classical machine
+#learning we think of the model as the hypothesis and the parameters as the tailoring of the hypothesis to a particular
+#set of data)
+#Model parameters are often estimated using an optimization algorithm
+#Examples of model parameters are:
+#   1.) The weights in an artifical neural network
+#   2.) The support vectors in a support vector machine
+#   3.) Coefficients in a linear or logistic regression
+
+#NOTE: In Ridge Regression we're essentially adding a penalty so that the fit to the training data has a little bit of
+#bias, and in return the variance is reduced when fit to the test data <- Eureka!
+#To determine hyperparameter in Ridge Regression cost function, just try a bunch of values and use Cross_Validation
+#(typically ten-fold Cross Validation) to determine which one minimizes variance
+
+#Think of Regularization term as a penalty...
