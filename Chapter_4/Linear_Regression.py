@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.linear_model import LinearRegression, SGDRegressor, Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -146,7 +146,7 @@ def plot_learning_curves(model, X, y):
 lin_reg = LinearRegression()
 plot_learning_curves(lin_reg, X, y)
 
-#What is going here in te results? When there just one or two instances in the training set the model can fit them
+#What is going here in the results? When there just one or two instances in the training set the model can fit them
 #perfectly, but as new instances are added to the training set  it becomes impossible for the model to fit the training
 #data because of the noise in the data and because it is not linear --> therefore the error goes up until it reaches
 #a plateau where adding new instances to the training set doesn't make the average error much better or worse
@@ -162,3 +162,34 @@ polynomial_regression = Pipeline([
 ])
 
 plot_learning_curves(polynomial_regression, X, y)
+
+#The learning curves for the 10th order polynomial are similar to the learning curves for a Linear Regression fit, with
+#two important differences
+#   1.) The error on the training data is much lower than that for the Linear Regression model
+#   2.) There is a gap between the curves -> the model performs much better on the training data than on the
+#       validation data which is a symptom of overfitting the data (a model that is overfitting). However, a much
+#       larger training set would bring the curves closer together
+
+#Note: we can cure an overfitting model so that the validation curve error approach the training curve error by feeding
+#      the model more data
+
+#Here we will perform Ridge Regression, a regularized version of Linear Regression, using a variant of the closed-form
+#equation on page 132 using a matrix factorization technique by Andre-Louis Cholesky
+ridge_reg = Ridge(alpha=1, solver="cholesky")
+ridge_reg.fit(X, y)
+print(ridge_reg.predict([[1.5]]))
+
+#Now applying Ridge Regression for Stochastic Gradient Descent
+sgd_reg = SGDRegressor(penalty="l2") #L2 norm, NOT 12!
+sgd_reg.fit(X, y.ravel())
+print(sgd_reg.predict([[1.5]]))
+
+#The penalty hyperparameter sets the type of regularization to use -> in this case the L2, the L2 norm, indicates that
+#you want SGD to add a regularization term to the cost function which is half the square of the L2 norm of the weight
+#vector --> this is simply Ridge Regression
+
+#Note: Rule of thumb -> if you have to specify a model parameter manually then it is probably a model hyperparameter
+#Some examples of model hyperparameters:
+#   1.) Learning rate for training a neural network
+#   2.) C and sigma hyperparameters for Support Vector Machines
+#   3.) The "K" in K-Nearest Neighbors
