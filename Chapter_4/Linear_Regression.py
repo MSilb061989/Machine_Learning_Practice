@@ -373,3 +373,16 @@ print(softmax_reg.predict_proba([[5, 2]]))
 
 #We're in luck when minimizing MSE cost function for Linear Regression because it's a convex function --> implies no
 #local minima (just one global minima) and is a continuous function
+#Using Gradient Descent, we should scale the features. Otherwise we will run into long convergence times
+
+#Batch Gradient Descent uses the whole training set on every step to compute the gradients --> it is slow
+#Solution? Use Stochastic Gradient Descent --> picks random instance in the trainin set at every step and computes the
+#gradient based only on that instance
+#   - Only one instance needs to be in memory at every iteration
+#   - A strategy with SGD is to gradually reduce the learning rate to allow the algorithm to settle at a global minimum
+#   - This is pretty much what simulated annealing is...
+#   - The learning rate at each iteration is determined from the learning schedule function
+
+#Polynomial Regression can also be achieved using Linear Regression with Scikit-Learn by using PolynomialFeatures to
+#to add a power to each feature in the training set (for the example on page 124 there's only one feature)
+#   - PolynomialFeatures transforms an array containing "n" features into an array containing (n+d)!/(d!n!) features
