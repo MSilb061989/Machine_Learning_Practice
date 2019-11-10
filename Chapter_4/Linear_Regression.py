@@ -432,3 +432,27 @@ print(softmax_reg.predict_proba([[5, 2]]))
 #   - Otherwise -> use Ridge
 #   - In general -> Elastic Ridge is preferred over Lasso Regression because of its erratic behavior when the number of
 #                   features exceeds the number of training instances or when several features are strongly correlated
+
+#Another regularization strategy is Early Stopping -> used in iterative algorithms such as Gradient Descent
+#   - Stop training as soon as validation error is minimized
+
+#Logistic Regression is a regression algorithm used for classification that estimates the probability that an instance
+#belongs to a particular class
+#   - What is the probability that this email is spam?
+#   - Estimated probability > 50% -> model predicts instance belongs to that class and is labeled "1"
+#   - Else -> model predicts instance doesn't belong to that class and is labeled a "0"
+
+#Works by computing a weighted sum of input features (plus a bias term) and outputs the logistic of the result
+#   - Logistic is a sigmoid function that outputs a number between 0 and 1
+#   - Once the logistic function has estimated the probability that an instance belongs to the positive class,
+#     predictions can be made
+#   - Predicts "1" if theta^Tx is positive and "0" if it is negative
+
+#How to train a Logistic Regression model?
+#   - Goal is to set parameter vector so that the model estimates high probabilities for positive instances (y = 1)
+#     and low probabilities for negative instances (y = 0)
+#   - Cost function over the whole training set is the average cost over all training instances, as shown on page 139
+#   - Cost function if convex - Gradient Descent can be utilizes and is guaranteed to return the global minimum
+#   - The gradient of the cost function for Logistic Regression is shown on page 139
+#   - Just like Linear Regression, Logistic Regression can be regularized with an L1 or L2 norm penalty
+#       - The hyperparameter that controls regularization strength is the inverse of alpha = C
