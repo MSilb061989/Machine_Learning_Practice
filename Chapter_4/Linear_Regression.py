@@ -386,3 +386,24 @@ print(softmax_reg.predict_proba([[5, 2]]))
 #Polynomial Regression can also be achieved using Linear Regression with Scikit-Learn by using PolynomialFeatures to
 #to add a power to each feature in the training set (for the example on page 124 there's only one feature)
 #   - PolynomialFeatures transforms an array containing "n" features into an array containing (n+d)!/(d!n!) features
+
+#How can we tell if a model if overfitting or underfittig data?
+#   - Used cross-validation previously to get an estimate of a model's generalization performance
+#   - If a model performs well on training data but generalizes poorly - overfitting according to cross-validation
+#   - If it performs poorly on both - underfitting according to cross-validation
+#Another way? Look at learning curves, which are plots of the model's performance on the training set and the validation
+#set as a function of the training set size
+#   - To generate, train the model several times on different sized subsets of the training set
+
+#A model's generalization error can be expressed as the sum of three different errors:
+#   - Bias: generalization error due to wrong assumptions (assume data is linear when it isn't) -> likely to underfit
+#           data
+#   - Variance: due to model's excessive sensitivity to small variations in the training data
+#   - Irreducible Error: due to noisiness of the data itself -> only way to reduce is to clean up the data and outliers
+
+#A good way to reduce overfitting is to regularize a model (constrain it) -> remove degrees of freedom such as in a
+#polynomial model
+#For linear model, regularization can be achieved by constraining the weights of the model
+#   - Ridge Regression
+#   - Lasso Regression
+#   - Elastic Net --> All three of these constrain the weights!
