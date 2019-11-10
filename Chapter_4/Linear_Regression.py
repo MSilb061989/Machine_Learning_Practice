@@ -407,3 +407,28 @@ print(softmax_reg.predict_proba([[5, 2]]))
 #   - Ridge Regression
 #   - Lasso Regression
 #   - Elastic Net --> All three of these constrain the weights!
+
+#Ridge Regression is a regularized version of Linear Regression with a regularization term added that is the sum of the
+#parameter weights squared multiplied by a hyperparameter -> forces learning algorithm to fit data and keep weights
+#small
+#   - The regularization term is only added during training
+#   - Hyperparameter controls how much regularization is applied
+#   - The vector of feature weights is represented as the L2 norm of the weight vector
+#   - Don't forget to scale the data!
+
+#Note: Ridge Regression can be performed from either the Normal Equation (page 132) or from Stochastic Gradient Descent
+#by adding a penalty equal to the L2 norm
+
+#Lasso Regression is another regularized version of Linear Regression that adds a regularization term to the cost
+#function, but instead of the L2 norm adds the L1 norm of the weight vector
+#   - Can eliminate weights that are not important (remove degrees in polynomial) -> feature selection
+#   - Lasso Regression can be implemented with Lasso class or by implementing SGDRegressor with an L1 penalty
+
+#The plot on page 134 highlights how weights are eliminated are evaluated by adding a penalty (L1 or L2)
+
+#Elastic Net is a middle ground between Ridge and Lasso Regression -> the regularization term is a mix of both Ridge
+#and Lasso regularization terms, which are controlled with the mix ratio "r"
+#   - When it is suspected not all of the features are useful -> use Lasso or Elastic Net
+#   - Otherwise -> use Ridge
+#   - In general -> Elastic Ridge is preferred over Lasso Regression because of its erratic behavior when the number of
+#                   features exceeds the number of training instances or when several features are strongly correlated
