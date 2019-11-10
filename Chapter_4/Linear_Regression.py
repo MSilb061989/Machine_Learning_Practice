@@ -337,3 +337,39 @@ plt.ylabel("Petal width", fontsize=14)
 plt.axis([2.9, 7, 0.8, 2.7])
 # save_fig("logistic_regression_contour_plot") #Gotta download that function off of Github... :/
 plt.show()
+
+#We're going to use Softmax Regression to classify the iris flowers into all three classes. Scikit-Learn's
+#LogisticRegression uses one-versus-all by default when you train it on more than two classes, but you can set the
+#multi_class hyperparameter to "multinomial" to swtich it to Softmax Regression instead. The solver also has to be
+#specified and it must be one that supports Softmax Regression ("lbfgs"). It also applies L2 regularization by default
+#which can be controlled with hyperparameter C.
+
+#Also, the cost function is a Cross-Entropy cost function, utilizing the minimization of transmitted information over
+#bits (see the weather example on Youtube by the author)
+X = iris["data"][:, (2, 3)] #petal length, petal width
+y = iris["target"]
+
+softmax_reg = LogisticRegression(multi_class="multinomial", solver="lbfgs", C=10)
+softmax_reg.fit(X, y)
+#The results show, for example, that an iris with 5 cm long and 2 cm wide petals is an Iris-Virginica, according to the
+#model (class 2)
+print(softmax_reg.predict([[5, 2]]))
+print(softmax_reg.predict_proba([[5, 2]]))
+
+#The figure on page 145 shows a detailed view of the output with Decision Boundaries (any two Decision Boundaries are
+#linear)
+
+#Some notes in review:
+#1.) Use the LinearRegression implementation in Scikit-Learn for training instead of the Normal Equation because it
+#implements the Moore-Penrose inverse, which always works, as opposed to the Normal Equation that may not if X^TX is
+#singular (not invertible)
+
+#2.) Also, the Normal Equation is computationally complex (n + 1) x (n + 1) matrix --> O(n^3) but SVD is only O(n^2)
+
+#3.) Other ways to train a Linear Regresion model when there are too many training instances to fit in memory
+#    - Gradient Descent - use learning rate hyperparameter and compute derivative with respect to parameter vector
+#    - Stochastic Gradient Descent
+#    - Batch and Mini-Batch Gradient Descent
+
+#We're in luck when minimizing MSE cost function for Linear Regression because it's a convex function --> implies no
+#local minima (just one global minima) and is a continuous function
