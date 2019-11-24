@@ -71,3 +71,23 @@ poly_kernal_clf.fit(X, y)
 
 #A common approach to find the right hyperparameter values is to use grid search --> faster to do a coarse grid search
 #first and then a finer grid search aroudn the best values found
+
+#The code below implements the kernel trick again for adding polynomial features using the similarity features method
+#without actually having to add them. To recall, the kernel trick makes it so that we can obtain the same result as
+#if we had added many features without actually having to add them. Below, the Gaussian RBF kernel achieves this as if
+#we had used the similarity features function with a Gaussian Radial Basis Function
+rbf_kernel_svm_clf = Pipeline([
+    ("scaler", StandardScaler()),
+    ("svm_clf", SVC(kernel="rbf", gamma=5, C=0.001)) #gamma and C are hyperparameters
+])
+
+#Train the model
+rbf_kernel_svm_clf.fit(X, y)
+
+#Some notes from page 155:
+#   Increasing gamma makes the bell-shape barrower and as a result each instance's range of influences is smaller -->
+#   the decision boundary ends up being more irregular, wiggling around individual instances
+#   Small gamma values makes the bell-shaped curve wider, so instances have a larger range of influence and the
+#   decision boundary ends up smoother
+#   Gamma winds up acting like a regularization hyperparameter --> if the model is overfitting then reduce it and
+#   increase if it is underfitting (similar to the C hyperparameter)
