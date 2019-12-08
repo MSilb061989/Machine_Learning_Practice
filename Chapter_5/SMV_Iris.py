@@ -2,10 +2,10 @@ import numpy as np
 from sklearn import datasets
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, LinearSVR
 from sklearn.datasets import make_moons
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.svm import SVC
+from sklearn.svm import SVC, SVR
 
 #This code loads the Iris dataset, scales the features and then trains a linear SVM (Using the LinearSVM class with
 #C = 1 and the hinge loss function) to detect the Iris-Virginica flowers
@@ -91,3 +91,29 @@ rbf_kernel_svm_clf.fit(X, y)
 #   decision boundary ends up smoother
 #   Gamma winds up acting like a regularization hyperparameter --> if the model is overfitting then reduce it and
 #   increase if it is underfitting (similar to the C hyperparameter)
+
+#The following code below uses the LinearSVR class to perform linear SVR Regression
+svm_reg = LinearSVR(epsilon=1.5)
+svm_reg.fit(X, y)
+
+#The code below uses Scikit-Learn's SVR class (which supports the kernel trick) and is the regression equivalent of the
+#SVC class and the LinearSVR class is the regression equivalent of the LinearSVC class
+
+#The LinearSVR class scales linearly with the size of the training set (similar to the LinearSVC class) while the SVR
+#class gets too slow when the training set grows too large (like the SVC class)
+svm_poly_reg = SVR(kernel="poly", degree=2, C=100, epsilon=0.1)
+
+#Train the model
+svm_poly_reg.fit(X, y)
+
+#Chapter Five Summary:
+
+#A Support Vector Machine (SVM) is capable of linear and nonlinear classification, regression and even outlier detection
+#They're also well-suited for classification of complex but small to medium sized datasets
+
+#SVM classifiers can be thought of as fitting the widest possible street between classes --> large margin classification
+#   - Want decision boundaries to separate classes and stay as far away from the closest training instances as possible
+#   - Adding more training instances "off the street" will not affect the decision boundary --> it is fully determined
+#    (supported) by the instances on the edge of the street --> these instances are called support vectors
+#NOTE: SVMs are sensitive to features scales --> should add feature scaling (Scikit-Learn's StandardScaler)
+
